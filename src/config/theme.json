@@ -26,7 +26,9 @@
   "fonts": {
     "font_family": {
       "primary": "Inter:wght@400;500;600",
-      "primary_type": "sans-serif"
+      "primary_type": "sans-serif",
+      "secondary": "Inter:wght@300;400",
+      "secondary_type": "sans-serif"
     },
     "font_size": {
       "base": "16",

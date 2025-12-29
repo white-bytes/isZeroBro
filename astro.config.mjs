@@ -4,10 +4,10 @@ import starlight from "@astrojs/starlight";
 import { viewTransitions } from "astro-vtbot/starlight-view-transitions";
 
 import tailwindcss from "@tailwindcss/vite";
-import config from "./src/config/config.json" assert { type: "json" };
-import social from "./src/config/social.json";
-import locals from "./src/config/locals.json";
-import sidebar from "./src/config/sidebar.json";
+import config from "./src/config/config.json" with { type: "json" };
+import social from "./src/config/social.json" with { type: "json" };
+import locals from "./src/config/locals.json" with { type: "json" };
+import sidebar from "./src/config/sidebar.json" with { type: "json" };
 
 import { fileURLToPath } from "url";
 
@@ -19,6 +19,8 @@ export const locales = locals
 
 // https://astro.build/config
 export default defineConfig({
+  // TODO: Update this with your actual site URL for proper sitemap generation
+  site: 'https://example.com',
   image: {
     service: { entrypoint: "astro/assets/services/noop" },
   },
