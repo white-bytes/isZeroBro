@@ -19,6 +19,8 @@ export const locales = locals
 
 // https://astro.build/config
 export default defineConfig({
+  // TODO: Update this with your actual site URL for proper sitemap generation
+  site: 'https://example.com',
   image: {
     service: { entrypoint: "astro/assets/services/noop" },
   },
