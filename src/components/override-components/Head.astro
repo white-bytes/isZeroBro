@@ -32,10 +32,10 @@ const secondaryFontURL = `https://fonts.googleapis.com/css2?family=${sf}&display
 <link href={secondaryFontURL} rel="stylesheet" />
 
 <!-- Font CSS Variables -->
-<style is:inline>
+<style is:inline define:vars={{ fontPrimary, fontSecondary }}>
   :root {
-    --font-primary: {fontPrimary}, sans-serif;
-    --font-secondary: {fontSecondary}, sans-serif;
+    --font-primary: var(--fontPrimary), sans-serif;
+    --font-secondary: var(--fontSecondary), sans-serif;
   }
 </style>
 
