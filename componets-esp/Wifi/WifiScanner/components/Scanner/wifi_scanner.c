@@ -1,4 +1,4 @@
-#include "wifi_scanner.h";
+#include "wifi_scanner.h"
 
 static const char *TAG = "scan";
 
@@ -89,26 +89,68 @@ char *cipherType(int cipherType)
     }
 }
 
-/* Initialize Wi-Fi as sta and set scan method */
-wifi_ap_record_t *wifiScan(int *count)
+void wifiScannerInit(void)
 {
-    // Initialize ESP-IDF components
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-    assert(sta_netif);
+    
+    // Create default instances
+    esp_netif_create_default_wifi_ap();
+    esp_netif_create_default_wifi_sta();
 
-    // Initialize WiFi
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+    // Configure AP parameters
+    wifi_config_t ap_config = {
+        .ap = {
+            .ssid = "ESP32-Scanner",
+            .ssid_len = strlen("ESP32-Scanner"),
+            .channel = 1,
+            .password = "",
+            .max_connection = 4,
+            .authmode = WIFI_AUTH_OPEN
+        },
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+    
+    ESP_LOGI(TAG, "WiFi Initialized in APSTA mode. SSID: ESP32-Scanner");
+}
 
-    // Start WiFi scan
-    ESP_ERROR_CHECK(esp_wifi_scan_start(NULL, true));
+/* Perform a scan and return results */
+wifi_ap_record_t *wifiScan(int *count)
+{
+    // Start WiFi scan (blocking)
+    wifi_scan_config_t scan_config = {
+        .ssid = NULL,
+        .bssid = NULL,
+        .channel = 0,
+        .show_hidden = true
+    };
+    
+    // Note: In APSTA mode, we can scan while AP is running.
+    esp_err_t err = esp_wifi_scan_start(&scan_config, true);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Scan failed: %s", esp_err_to_name(err));
+        *count = 0;
+        return NULL;
+    }
 
-    // Allocate memory for ap_info array dynamically
-    wifi_ap_record_t *ap_info = (wifi_ap_record_t *)malloc(MAX_AP_LIST * sizeof(wifi_ap_record_t));
+    // Get scan count
+    uint16_t number = MAX_AP_LIST;
+    esp_wifi_scan_get_ap_num(&number);
+
+    // Limit to MAX_AP_LIST
+    if (number > MAX_AP_LIST) {
+        number = MAX_AP_LIST;
+    }
+    *count =  number;
+
+    // Allocate memory
+    wifi_ap_record_t *ap_info = (wifi_ap_record_t *)malloc(number * sizeof(wifi_ap_record_t));
     if (ap_info == NULL)
     {
         ESP_LOGE(TAG, "Failed to allocate memory for ap_info");
@@ -117,21 +159,10 @@ wifi_ap_record_t *wifiScan(int *count)
     }
 
     // Get scan results
-    uint16_t number = MAX_AP_LIST;
-    esp_err_t scan_result = esp_wifi_scan_get_ap_records(&number, ap_info);
-    if (scan_result != ESP_OK)
+    err = esp_wifi_scan_get_ap_records(&number, ap_info);
+    if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to get scan records: %s", esp_err_to_name(scan_result));
-        free(ap_info);
-        *count = 0;
-        return NULL;
-    }
-
-    // Get scan count
-    scan_result = esp_wifi_scan_get_ap_num(count);
-    if (scan_result != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to get scan count: %s", esp_err_to_name(scan_result));
+        ESP_LOGE(TAG, "Failed to get scan records: %s", esp_err_to_name(err));
         free(ap_info);
         *count = 0;
         return NULL;

@@ -1,0 +1,111 @@
+---
+---
+
+<div class="flex flex-col items-center min-h-screen bg-gray-900 text-gray-100 p-5 font-sans">
+  <h1 class="text-3xl font-light text-purple-400 mb-8 tracking-wide">WiFi Scanner</h1>
+  
+  <button id="scanBtn" class="bg-teal-400 text-black font-bold py-3 px-6 rounded transition-transform active:scale-95 uppercase tracking-wide flex items-center gap-2 hover:bg-teal-300">
+    <span>SCAN NETWORKS</span>
+    <div id="loader" class="hidden w-5 h-5 border-4 border-white/20 border-t-teal-700 rounded-full animate-spin"></div>
+  </button>
+
+  <div id="results" class="mt-8 w-full max-w-2xl grid gap-4">
+    <!-- Results will be injected here -->
+  </div>
+</div>
+
+<script>
+  // Interface for AP object
+  interface AP {
+    ssid: string;
+    rssi: number;
+    channel: number;
+    auth: string;
+  }
+
+  const btn = document.getElementById('scanBtn') as HTMLButtonElement;
+  const loader = document.getElementById('loader') as HTMLDivElement;
+  const resDiv = document.getElementById('results') as HTMLDivElement;
+
+  async function scan() {
+    if(!btn || !loader || !resDiv) return;
+
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    resDiv.innerHTML = '';
+
+    try {
+      // In development (local astro), this might fail if not proxying. 
+      // On ESP32, this is relative to root.
+      const response = await fetch('/scan');
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      const data: AP[] = await response.json();
+      
+      if (data.length === 0) {
+        resDiv.innerHTML = '<div class="text-center opacity-50">No networks found</div>';
+      } else {
+        data.forEach(ap => {
+          const card = document.createElement('div');
+          card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg flex justify-between items-center animate-fade-in';
+          card.innerHTML = `
+            <div>
+              <div class="font-bold text-lg text-white">${ap.ssid || '<span class="italic opacity-50">Hidden Network</span>'}</div>
+              <div class="text-sm opacity-70 flex gap-4 mt-1">
+                <span>Ch: ${ap.channel}</span>
+                <span>${ap.auth}</span>
+              </div>
+            </div>
+            <div class="font-bold text-teal-400 text-xl">${ap.rssi} dBm</div>
+          `;
+          resDiv.appendChild(card);
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      resDiv.innerHTML = `<div class="text-center text-red-400">Scan failed: ${(e as Error).message}</div>`;
+      
+      // Mock data for development testing if fetch fails
+      if (import.meta.env.DEV) {
+          console.log("Dev mode: Showing mock data");
+          const mockData = [
+              { ssid: 'Dev Network 1', rssi: -45, channel: 1, auth: 'WPA2' },
+              { ssid: 'Dev Network 2', rssi: -70, channel: 6, auth: 'OPEN' },
+              { ssid: 'Dev Network 3', rssi: -85, channel: 11, auth: 'WPA3' }
+          ];
+           mockData.forEach(ap => {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-800 p-4 rounded-lg shadow-lg flex justify-between items-center border border-gray-700';
+            card.innerHTML = `
+                <div>
+                <div class="font-bold text-lg text-white">${ap.ssid}</div>
+                <div class="text-sm opacity-70 flex gap-4 mt-1">
+                    <span>Ch: ${ap.channel}</span>
+                    <span>${ap.auth}</span>
+                </div>
+                </div>
+                <div class="font-bold text-teal-400 text-xl">${ap.rssi} dBm</div>
+            `;
+            resDiv.appendChild(card);
+            });
+      }
+    } finally {
+      btn.disabled = false;
+      loader.classList.add('hidden');
+    }
+  }
+
+  if (btn) {
+    btn.addEventListener('click', scan);
+  }
+</script>
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+</style>
