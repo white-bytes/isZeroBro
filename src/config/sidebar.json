@@ -30,6 +30,42 @@
       ]
     },
     {
+      "label": "ESP32 Examples",
+      "translations": {
+        "fr": "Exemples ESP32"
+      },
+      "items": [
+        {
+          "label": "[microchip] Overview",
+          "translations": {
+            "fr": "[microchip] Aperçu"
+          },
+          "slug": "esp32-examples"
+        },
+        {
+          "label": "[signal] WiFi Scanner (Recommended)",
+          "translations": {
+            "fr": "[signal] Scanner WiFi (Recommandé)"
+          },
+          "slug": "esp32-examples/wifi-scanner"
+        },
+        {
+          "label": "[credit-card] RFID Reader",
+          "translations": {
+            "fr": "[credit-card] Lecteur RFID"
+          },
+          "slug": "esp32-examples/rfid-reader"
+        },
+        {
+          "label": "[keyboard] BadUSB UART",
+          "translations": {
+            "fr": "[keyboard] BadUSB UART"
+          },
+          "slug": "esp32-examples/badusb-uart"
+        }
+      ]
+    },
+    {
       "label": "Content",
       "translations": {
         "fr": "Contenu"
