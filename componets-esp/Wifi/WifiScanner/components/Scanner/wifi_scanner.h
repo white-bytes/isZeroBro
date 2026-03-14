@@ -16,6 +16,7 @@ char* cipherType(int cipherType);
 char* printAuthMode(int authmode);
 
 wifi_ap_record_t* wifiScan(int* count);
+void wifiScannerInit(void);
 
 void wifiScannerEvent(void *ctx, system_event_t *event);
 
